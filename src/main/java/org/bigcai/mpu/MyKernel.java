@@ -61,12 +61,34 @@ public class MyKernel implements BaseKernel {
         return "[emulation demo of linux]";
     }
 
+    /**
+     * implement schedule function
+     *
+     * @param processorInfo
+     */
     @Override
     public void clockInterrupt(String processorInfo) {
         System.out.println(processorInfo + " kernel code : schedule task of kernel");
         detachTaskByProcessor(processorInfo);
         // try retrieve from kernel ready queue
         tryAttachTaskForProcessor(processorInfo);
+    }
+
+    /**
+     * implement ready queue (read task instruction)
+     *
+     * @param processorId
+     * @return
+     */
+    @Override
+    public TaskStruct getCurrentTask(String processorId) {
+        if(processorMap.get(processorId) == null) {
+            // still nothing
+            return null;
+        } else {
+            TaskStruct taskStruct = taskStructReadyQueue.get(processorMap.get(processorId));
+            return taskStruct;
+        }
     }
 
     private void detachTaskByProcessor(String processorInfo) {
@@ -77,17 +99,6 @@ public class MyKernel implements BaseKernel {
         TaskStruct taskStruct = taskStructReadyQueue.get(i);
         taskStruct.attachProcessor = null;
         processorMap.remove(processorInfo);
-    }
-
-    @Override
-    public TaskStruct getCurrentTask(String processorId) {
-        if(processorMap.get(processorId) == null) {
-            // still nothing
-            return null;
-        } else {
-            TaskStruct taskStruct = taskStructReadyQueue.get(processorMap.get(processorId));
-            return taskStruct;
-        }
     }
 
     private void tryAttachTaskForProcessor(String processorId) {
