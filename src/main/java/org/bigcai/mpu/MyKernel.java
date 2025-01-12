@@ -98,14 +98,14 @@ public class MyKernel implements BaseKernel {
         lockForReadyQueue.lock();
         if (nextTaskStruct.attachProcessor == null) {
             // distribute a task from ready queue to processor that apply instruction.
-            processorMap.put(processorId, i);
             nextTaskStruct.attachProcessor = processorId;
+            processorMap.put(processorId, i);
         }
         lockForReadyQueue.unlock();
     }
 
     private AtomicInteger nextTaskIndex() {
-        // schedule next task for processorId
+        // todo schedule next task for processorId
         if (curr.get() >= taskStructReadyQueue.size() - 1) {
             curr.set(0);
         } else {
