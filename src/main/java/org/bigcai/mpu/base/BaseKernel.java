@@ -5,7 +5,6 @@ import org.bigcai.mpu.TaskStruct;
 public interface BaseKernel {
     public void init();
     public String operatorSystemInfo();
-    public void clockInterrupt();
-
-    public TaskStruct getCurrentTask();
+    public void clockInterrupt(String processorInfo);
+    public TaskStruct getCurrentTask(String processorId);
 }

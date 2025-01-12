@@ -20,10 +20,12 @@ public class ProcessorUnit {
 
     private String processorInfo;
     private BaseKernel baseKernel;
+    public int frequency;
 
-    public ProcessorUnit(String processorInfo, BaseKernel baseKernel) {
+    public ProcessorUnit(String processorInfo, BaseKernel baseKernel, int frequency) {
         this.processorInfo = processorInfo;
         this.baseKernel = baseKernel;
+        this.frequency = frequency;
     }
 
     public void powerOn() {
@@ -41,14 +43,14 @@ public class ProcessorUnit {
             @Override
             public void doInterruptJob() {
                 // kernel code : schedule task of kernel
-                baseKernel.clockInterrupt();
+                baseKernel.clockInterrupt(processorInfo);
             }
         });
 
         ClockInterrupt clockInterrupt = (ClockInterrupt) lapic.getInterruptListeners().get(CLOCK_INTERRUPT_NUM);
         if (clockInterrupt != null) {
-            int clockInterruptFrequency = PROCESSOR_UNIT_FREQUENCY * 10;
-            System.out.println("clock Interrupt Frequency: " + clockInterruptFrequency);
+            int clockInterruptFrequency = PROCESSOR_UNIT_FREQUENCY * frequency;
+            System.out.println(processorInfo + " clock Interrupt Frequency: " + clockInterruptFrequency);
             clockInterrupt.runTimer(clockInterruptFrequency);
         }
     }
@@ -70,37 +72,35 @@ public class ProcessorUnit {
     private void executeInstruction() {
         // 从内核加载指令,  elf 文件，变成 task_struct , task_struct 编译成指令集合， task_struct 包含了环境变量和质量，
         // task_struct 包含了时间片计数器（其实就是指令数计数器）
-        TaskStruct task = baseKernel.getCurrentTask();
+        TaskStruct task = baseKernel.getCurrentTask(processorInfo);
+
+        if(task == null || task.attachProcessor == null || !task.attachProcessor.equals(processorInfo)) {
+            // 模拟指令耗时
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+            }
+            return;
+        }
         String[] instruction = task.instructions.get(0).split(" ");
+
         registers[0] = 0;
         registers[1] = Integer.valueOf(instruction[1]);
         registers[2] = Integer.valueOf(instruction[2]);
-        doInstruction(instruction[0]);
+        doInstruction(instruction[0], "");
+
     }
 
     // 执行任务中的每条指令
-    private void doInstruction(String instruction) {
+    private void doInstruction(String instruction, String debugInfo) {
         // 处理中断
         if (checkForInterrupt()) {
             handleInterrupt();
             return;
         }
+        InstructionSetArch.execInstruction(instruction, registers);
 
-        // 根据指令执行对应操作（这里简化为加法操作）
-        switch (instruction) {
-            case "ADD":
-                registers[0] = registers[1] + registers[2];
-                break;
-            case "SUB":
-                registers[0] = registers[1] - registers[2];
-                break;
-            case "MUL":
-                registers[0] = registers[1] * registers[2];
-                break;
-            // 可以添加更多指令
-        }
-        System.out.println("指令执行完毕: " + instruction + " 寄存器状态 " + registers[0]);
-
+        System.out.println(processorInfo + " 指令执行完毕: " + instruction + " 寄存器状态 " + registers[0] );
         // 模拟指令耗时
         try {
             Thread.sleep(100);
