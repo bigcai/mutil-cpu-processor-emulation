@@ -64,6 +64,10 @@ public class ProcessorUnit {
 
     public void loop() {
         while (true) {
+            // 处理中断
+            if (checkForInterrupt()) {
+                handleInterrupt();
+            }
             // 执行任务
             executeInstruction();
         }

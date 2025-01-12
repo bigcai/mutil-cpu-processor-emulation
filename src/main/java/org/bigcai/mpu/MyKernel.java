@@ -65,22 +65,22 @@ public class MyKernel implements BaseKernel {
     public void clockInterrupt(String processorInfo) {
         System.out.println(processorInfo + " kernel code : schedule task of kernel");
         detachTaskByProcessor(processorInfo);
+        // try retrieve from kernel ready queue
+        tryAttachTaskForProcessor(processorInfo);
     }
 
     private void detachTaskByProcessor(String processorInfo) {
-        TaskStruct taskStruct = taskStructReadyQueue.get(processorMap.get(processorInfo));
+        int i = processorMap.getOrDefault(processorInfo, -1);
+        if(i == -1) {
+           return;
+        }
+        TaskStruct taskStruct = taskStructReadyQueue.get(i);
         taskStruct.attachProcessor = null;
         processorMap.remove(processorInfo);
     }
 
     @Override
     public TaskStruct getCurrentTask(String processorId) {
-        if (processorMap.get(processorId) == null) {
-            // try retrieve task from processor context is nothing,
-            // then try retrieve from kernel ready queue
-            tryAttachTaskForProcessor(processorId);
-        }
-
         if(processorMap.get(processorId) == null) {
             // still nothing
             return null;
