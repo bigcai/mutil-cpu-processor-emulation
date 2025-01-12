@@ -75,13 +75,19 @@ public class MyKernel implements BaseKernel {
 
     @Override
     public TaskStruct getCurrentTask(String processorId) {
-
-        while (processorMap.get(processorId) == null) {
+        if (processorMap.get(processorId) == null) {
+            // try retrieve task from processor context is nothing,
+            // then try retrieve from kernel ready queue
             tryAttachTaskForProcessor(processorId);
         }
-        TaskStruct taskStruct = taskStructReadyQueue.get(processorMap.get(processorId));
 
-        return taskStruct;
+        if(processorMap.get(processorId) == null) {
+            // still nothing
+            return null;
+        } else {
+            TaskStruct taskStruct = taskStructReadyQueue.get(processorMap.get(processorId));
+            return taskStruct;
+        }
     }
 
     private void tryAttachTaskForProcessor(String processorId) {
