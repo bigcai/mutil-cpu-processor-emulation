@@ -119,6 +119,10 @@ public class MyKernel implements BaseKernel {
         TaskStruct nextTaskStruct = taskStructReadyQueue.get(i);
 
         lockForReadyQueue.lock();
+        if(nextTaskStruct.programCounter >= nextTaskStruct.instructions.size()) {
+            // dont attach a ended task
+            return;
+        }
         if (nextTaskStruct.attachProcessor == null) {
             // distribute a task from ready queue to processor that apply instruction.
             nextTaskStruct.attachProcessor = processorId;

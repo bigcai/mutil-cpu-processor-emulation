@@ -23,7 +23,6 @@ public abstract class ClockInterrupt extends Interrupt {
         TimerTask task = new TimerTask() {
             @Override
             public void run() {
-                System.out.println("当前时间: " + new Date());
                 // timer to call owner of clock interrupt
                 interruptOwner.callFrom(ClockInterrupt.super.getInterruptNumByInterruptOwner());
             }

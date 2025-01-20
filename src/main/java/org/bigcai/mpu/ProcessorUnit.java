@@ -18,7 +18,7 @@ public class ProcessorUnit {
 
     LocalAdvancedProgrammableInterruptController lapic = new LocalAdvancedProgrammableInterruptController(this);
 
-    private Integer[] registers = new Integer[4];  // 模拟寄存器
+    private Integer[] registers = new Integer[5];  // 模拟寄存器
     private String processorInfo;
     private BaseKernel baseKernel;
     public int frequency;
@@ -95,13 +95,25 @@ public class ProcessorUnit {
             }
             return;
         }
-        String[] instruction = task.instructions.get(0).split(" ");
+        registers[4] = task.programCounter;
+
+        if(registers[4] >= task.instructions.size() || task.instructions.get(registers[4]) == null) {
+            return;
+        }
+        String[] instruction = task.instructions.get(registers[4]).split(" ");
 
         registers[0] = 0;
         registers[1] = Integer.valueOf(instruction[1]);
         registers[2] = Integer.valueOf(instruction[2]);
-        doInstruction(instruction[0], "");
+        // 设置特权等级为 用户态
+        registers[3] = 3;
+        // 设置程序计数器
+        doInstruction(instruction[0], "taskId is " + task.taskId);
+        task.programCounter = registers[4];
 
+        if(task.programCounter >= task.instructions.size() || task.instructions.get(task.programCounter) == null) {
+            System.out.println("taskId " + task.taskId + " is end!");
+        }
     }
 
     // 执行任务中的每条指令
@@ -113,7 +125,7 @@ public class ProcessorUnit {
         }
         InstructionSetArch.execInstruction(instruction, registers, this);
 
-        System.out.println(processorInfo + " 指令执行完毕: " + instruction + " 寄存器状态 " + registers[0] );
+        System.out.println(processorInfo + " 指令执行完毕: " + instruction + " 寄存器状态 " + registers[0]  + " debuginfo: " + debugInfo);
         // 模拟指令耗时
         try {
             Thread.sleep(100);

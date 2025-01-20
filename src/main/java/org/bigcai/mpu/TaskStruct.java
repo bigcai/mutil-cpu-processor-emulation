@@ -7,6 +7,10 @@ public class TaskStruct {
 
     String taskId;
     String attachProcessor;
+
+    Integer programCounter = 0;
+
+
     public List<String> instructions = new ArrayList<>();
 
     public String getTaskId() {

@@ -28,6 +28,8 @@ public class InstructionSetArch {
                 break;
             // 可以添加更多指令
         }
+        // 更新程序计数器
+        registers[4]+=1;
     }
 
     private static void doSysCallInterrupt(ProcessorUnit processorUnit) {
