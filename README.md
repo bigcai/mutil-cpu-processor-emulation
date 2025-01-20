@@ -1,3 +1,8 @@
 "# mutil-cpu-processor-emulation" 
 
-hello world
+-> build clock interrupt
+....
+
+-> add program counter
+-> add ksoftirqd
+-> page table
