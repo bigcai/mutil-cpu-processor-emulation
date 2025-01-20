@@ -21,4 +21,12 @@ public interface BaseKernel {
      * @return
      */
     public TaskStruct getCurrentTask(String processorId);
+
+    /**
+     * change task_struct context and run system call of kernel
+     *
+     * @param processorInfo
+     * @param registers
+     */
+    void syscallInterrupt(String processorInfo , Integer[] registers);
 }

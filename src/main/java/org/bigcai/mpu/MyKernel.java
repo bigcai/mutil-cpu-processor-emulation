@@ -22,7 +22,8 @@ public class MyKernel implements BaseKernel {
         // 添加作业
         TaskStruct taskStruct1 = new TaskStruct();
         taskStruct1.setTaskId("taskStruct1");
-        taskStruct1.instructions.add("ADD 1 3");
+        taskStruct1.instructions.add("SYSCALL 1 3");
+        taskStruct1.instructions.add("ADD 6 18");
         taskStructReadyQueue.add(taskStruct1);
 
         TaskStruct taskStruct2 = new TaskStruct();
@@ -89,6 +90,17 @@ public class MyKernel implements BaseKernel {
             TaskStruct taskStruct = taskStructReadyQueue.get(processorMap.get(processorId));
             return taskStruct;
         }
+    }
+
+    @Override
+    public void syscallInterrupt(String processorInfo, Integer[] registers) {
+        // 切换程序为中断向量表中指向的内核程序(让出当前程序上下文)
+
+        // todo 实现最简单的系统调用逻辑
+        System.out.println(processorInfo + " syscall from user task_struct," +
+                " change ring3 to ring0, ring is :" + registers[3]);
+
+        // 切换程序为之前执行的用户进程（现场还原)
     }
 
     private void detachTaskByProcessor(String processorInfo) {

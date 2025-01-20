@@ -4,12 +4,14 @@ import org.bigcai.mpu.base.BaseKernel;
 import org.bigcai.mpu.base.Interrupt;
 import org.bigcai.mpu.interrupt.ClockInterrupt;
 import org.bigcai.mpu.interrupt.LocalAdvancedProgrammableInterruptController;
+import org.bigcai.mpu.interrupt.SyscallInterrupt;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public class ProcessorUnit {
-    public static final int CLOCK_INTERRUPT_NUM = 999;
+    public static final int CLOCK_INTERRUPT_NUM = 0x20;
+    public static final int SYSCALL_INTERRUPT_NUM = 0x80;
     public static final int PROCESSOR_UNIT_FREQUENCY = 100;
 
     public Map<Integer, Boolean> interruptStatus = new HashMap<>();
@@ -17,7 +19,6 @@ public class ProcessorUnit {
     LocalAdvancedProgrammableInterruptController lapic = new LocalAdvancedProgrammableInterruptController(this);
 
     private Integer[] registers = new Integer[4];  // 模拟寄存器
-
     private String processorInfo;
     private BaseKernel baseKernel;
     public int frequency;
@@ -44,6 +45,14 @@ public class ProcessorUnit {
             public void doInterruptJob() {
                 // kernel code : schedule task of kernel
                 baseKernel.clockInterrupt(processorInfo);
+            }
+        });
+
+        lapic.addInterruptListeners(new SyscallInterrupt(lapic, SYSCALL_INTERRUPT_NUM) {
+            @Override
+            public void doInterruptJob() {
+                // kernel code : do syscall
+                baseKernel.syscallInterrupt(processorInfo, registers);
             }
         });
 
@@ -102,7 +111,7 @@ public class ProcessorUnit {
             handleInterrupt();
             return;
         }
-        InstructionSetArch.execInstruction(instruction, registers);
+        InstructionSetArch.execInstruction(instruction, registers, this);
 
         System.out.println(processorInfo + " 指令执行完毕: " + instruction + " 寄存器状态 " + registers[0] );
         // 模拟指令耗时
