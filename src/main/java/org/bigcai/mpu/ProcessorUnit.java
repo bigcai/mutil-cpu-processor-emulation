@@ -1,10 +1,10 @@
 package org.bigcai.mpu;
 
 import org.bigcai.mpu.base.BaseKernel;
-import org.bigcai.mpu.base.Interrupt;
-import org.bigcai.mpu.interrupt.ClockInterrupt;
-import org.bigcai.mpu.interrupt.LocalAdvancedProgrammableInterruptController;
-import org.bigcai.mpu.interrupt.SyscallInterrupt;
+import org.bigcai.mpu.base.BaseInterrupt;
+import org.bigcai.mpu.interrupt.ClockBaseInterrupt;
+import org.bigcai.mpu.interrupt.LocalAdvancedProgrammableBaseInterruptController;
+import org.bigcai.mpu.interrupt.SyscallBaseInterrupt;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -13,10 +13,17 @@ public class ProcessorUnit {
     public static final int CLOCK_INTERRUPT_NUM = 0x20;
     public static final int SYSCALL_INTERRUPT_NUM = 0x80;
     public static final int PROCESSOR_UNIT_FREQUENCY = 100;
+    public static final int PROGRAM_COUNTOR_REGISTER = 4;
+    public static final int RETURN_VALUE_REGISTER = 0;
+    public static final int INSTRUCTION_FIRST_ARG_REGISTER = 1;
+    public static final int INSTRUCTION_SECOND_ARG_REGISTER = 2;
+    public static final int CURRENT_PRIVILEGE_LEVEL_REGISTER = 3;
+    public static final int CURRENT_PRIVILEGE_LEVEL_KERNEL_SPACE = 0;
+    public static final int CURRENT_PRIVILEGE_LEVEL_USER_SPACE = 3;
 
     public Map<Integer, Boolean> interruptStatus = new HashMap<>();
 
-    LocalAdvancedProgrammableInterruptController lapic = new LocalAdvancedProgrammableInterruptController(this);
+    LocalAdvancedProgrammableBaseInterruptController lapic = new LocalAdvancedProgrammableBaseInterruptController(this);
 
     private Integer[] registers = new Integer[5];  // 模拟寄存器
     private String processorInfo;
@@ -40,7 +47,7 @@ public class ProcessorUnit {
         loadKernel();
 
         // register a clock interrupt, to schedule task struct
-        lapic.addInterruptListeners(new ClockInterrupt(lapic, CLOCK_INTERRUPT_NUM) {
+        lapic.addInterruptListeners(new ClockBaseInterrupt(lapic, CLOCK_INTERRUPT_NUM) {
             @Override
             public void doInterruptJob() {
                 // kernel code : schedule task of kernel
@@ -48,7 +55,7 @@ public class ProcessorUnit {
             }
         });
 
-        lapic.addInterruptListeners(new SyscallInterrupt(lapic, SYSCALL_INTERRUPT_NUM) {
+        lapic.addInterruptListeners(new SyscallBaseInterrupt(lapic, SYSCALL_INTERRUPT_NUM) {
             @Override
             public void doInterruptJob() {
                 // kernel code : do syscall
@@ -56,7 +63,7 @@ public class ProcessorUnit {
             }
         });
 
-        ClockInterrupt clockInterrupt = (ClockInterrupt) lapic.getInterruptListeners().get(CLOCK_INTERRUPT_NUM);
+        ClockBaseInterrupt clockInterrupt = (ClockBaseInterrupt) lapic.getInterruptListeners().get(CLOCK_INTERRUPT_NUM);
         if (clockInterrupt != null) {
             int clockInterruptFrequency = PROCESSOR_UNIT_FREQUENCY * frequency;
             System.out.println(processorInfo + " clock Interrupt Frequency: " + clockInterruptFrequency);
@@ -95,21 +102,24 @@ public class ProcessorUnit {
             }
             return;
         }
-        registers[4] = task.programCounter;
+        registers[PROGRAM_COUNTOR_REGISTER] = task.programCounter;
 
-        if(registers[4] >= task.instructions.size() || task.instructions.get(registers[4]) == null) {
+        if(registers[PROGRAM_COUNTOR_REGISTER] >= task.instructions.size()
+                || task.instructions.get(registers[PROGRAM_COUNTOR_REGISTER]) == null) {
+            // if program counter point the end of program, or nothing instruction need to run , just do nothing.
             return;
         }
         String[] instruction = task.instructions.get(registers[4]).split(" ");
+        String command = instruction[0];
 
-        registers[0] = 0;
-        registers[1] = Integer.valueOf(instruction[1]);
-        registers[2] = Integer.valueOf(instruction[2]);
+        registers[RETURN_VALUE_REGISTER] = 0;
+        registers[INSTRUCTION_FIRST_ARG_REGISTER] = Integer.valueOf(instruction[INSTRUCTION_FIRST_ARG_REGISTER]);
+        registers[INSTRUCTION_SECOND_ARG_REGISTER] = Integer.valueOf(instruction[INSTRUCTION_SECOND_ARG_REGISTER]);
         // 设置特权等级为 用户态
-        registers[3] = 3;
+        registers[CURRENT_PRIVILEGE_LEVEL_REGISTER] = 3;
         // 设置程序计数器
-        doInstruction(instruction[0], "taskId is " + task.taskId);
-        task.programCounter = registers[4];
+        doInstruction(command, "taskId is " + task.taskId);
+        task.programCounter = registers[PROGRAM_COUNTOR_REGISTER];
 
         if(task.programCounter >= task.instructions.size() || task.instructions.get(task.programCounter) == null) {
             System.out.println("taskId " + task.taskId + " is end!");
@@ -138,7 +148,7 @@ public class ProcessorUnit {
             //  use bit operate would get better performance!
             Integer key = entry.getKey();
             if (entry.getValue() == true) {
-                Interrupt interrupt = lapic.getInterruptListeners().get(key);
+                BaseInterrupt interrupt = lapic.getInterruptListeners().get(key);
                 interrupt.doInterruptJob();
                 // reset
                 interruptStatus.put(key, false);

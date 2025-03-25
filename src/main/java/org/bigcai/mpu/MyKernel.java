@@ -9,6 +9,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 
+import static org.bigcai.mpu.ProcessorUnit.CURRENT_PRIVILEGE_LEVEL_REGISTER;
+
 public class MyKernel implements BaseKernel {
 
     private final Map<String, Integer> processorMap = new ConcurrentHashMap<>();
@@ -69,6 +71,10 @@ public class MyKernel implements BaseKernel {
      */
     @Override
     public void clockInterrupt(String processorInfo) {
+        schedulerByKernel(processorInfo);
+    }
+
+    private void schedulerByKernel(String processorInfo) {
         System.out.println(processorInfo + " kernel code : schedule task of kernel");
         detachTaskByProcessor(processorInfo);
         // try retrieve from kernel ready queue
@@ -87,9 +93,13 @@ public class MyKernel implements BaseKernel {
             // still nothing
             return null;
         } else {
-            TaskStruct taskStruct = taskStructReadyQueue.get(processorMap.get(processorId));
-            return taskStruct;
+            return readTSS(processorId);
         }
+    }
+
+    private TaskStruct readTSS(String processorId) {
+        TaskStruct taskStruct = taskStructReadyQueue.get(processorMap.get(processorId));
+        return taskStruct;
     }
 
     @Override
@@ -98,7 +108,7 @@ public class MyKernel implements BaseKernel {
 
         // todo 实现最简单的系统调用逻辑
         System.out.println(processorInfo + " syscall from user task_struct," +
-                " change ring3 to ring0, ring is :" + registers[3]);
+                " change ring3 to ring0, ring is :" + registers[CURRENT_PRIVILEGE_LEVEL_REGISTER]);
 
         // 切换程序为之前执行的用户进程（现场还原)
     }

@@ -1,20 +1,19 @@
 package org.bigcai.mpu.interrupt;
 
-import org.bigcai.mpu.base.Interrupt;
-import org.bigcai.mpu.base.InterruptController;
+import org.bigcai.mpu.base.BaseInterrupt;
+import org.bigcai.mpu.base.BaseInterruptController;
 
-import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public abstract class ClockInterrupt extends Interrupt {
+public abstract class ClockBaseInterrupt extends BaseInterrupt {
     // this clock interrupt is generated from timer that schedule at fixed rate.
     public Timer timer  = new Timer();
 
-    private InterruptController interruptOwner;
+    private BaseInterruptController interruptOwner;
 
 
-    public ClockInterrupt(InterruptController interruptController, Integer interruptNumByInterruptOwner) {
+    public ClockBaseInterrupt(BaseInterruptController interruptController, Integer interruptNumByInterruptOwner) {
         interruptOwner = interruptController;
         super.interruptNumByInterruptOwner = interruptNumByInterruptOwner;
     }
@@ -24,7 +23,7 @@ public abstract class ClockInterrupt extends Interrupt {
             @Override
             public void run() {
                 // timer to call owner of clock interrupt
-                interruptOwner.callFrom(ClockInterrupt.super.getInterruptNumByInterruptOwner());
+                interruptOwner.callFrom(ClockBaseInterrupt.super.getInterruptNumByInterruptOwner());
             }
         };
 

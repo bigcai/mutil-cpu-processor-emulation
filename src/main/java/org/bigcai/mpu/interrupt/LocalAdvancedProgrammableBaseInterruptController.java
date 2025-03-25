@@ -1,15 +1,15 @@
 package org.bigcai.mpu.interrupt;
 
 import org.bigcai.mpu.ProcessorUnit;
-import org.bigcai.mpu.base.InterruptController;
+import org.bigcai.mpu.base.BaseInterruptController;
 
-public class LocalAdvancedProgrammableInterruptController extends InterruptController {
+public class LocalAdvancedProgrammableBaseInterruptController extends BaseInterruptController {
 
     /**
      * LocalAdvancedProgrammableInterruptController belong to ProcessorUnit, so need to bind to specified ProcessorUnit
      */
     private ProcessorUnit processorUnit;
-    public LocalAdvancedProgrammableInterruptController(ProcessorUnit processorUnit) {
+    public LocalAdvancedProgrammableBaseInterruptController(ProcessorUnit processorUnit) {
         super();
         this.processorUnit = processorUnit;
     }
